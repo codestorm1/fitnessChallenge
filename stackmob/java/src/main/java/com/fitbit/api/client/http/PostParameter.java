@@ -37,7 +37,7 @@ public class PostParameter implements Serializable, Comparable {
     String name;
     String value;
     private static final long serialVersionUID = -8708108746980739212L;
-    static final PostParameter[] EMPTY_ARRAY = new PostParameter[0];
+    public static final PostParameter[] EMPTY_ARRAY = new PostParameter[0];
 
     public PostParameter(String name, String value) {
         this.name = name;

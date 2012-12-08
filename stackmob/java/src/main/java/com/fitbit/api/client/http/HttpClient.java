@@ -57,7 +57,7 @@ public class HttpClient implements Serializable {
 
     protected static Log log = LogFactory.getLog(HttpClient.class);
 	
-	protected static enum HttpMethod {
+	public static enum HttpMethod {
 		GET,
 		POST,
 		DELETE,
@@ -85,8 +85,8 @@ public class HttpClient implements Serializable {
     private int proxyPort = Configuration.getProxyPort();
     private String proxyAuthUser = Configuration.getProxyUser();
     private String proxyAuthPassword = Configuration.getProxyPassword();
-    private int connectionTimeout = Configuration.getConnectionTimeout();
-    private int readTimeout = Configuration.getReadTimeout();
+    private int connectionTimeout = 20000; //Configuration.getConnectionTimeout();
+    private int readTimeout = 20000;//Configuration.getReadTimeout();
     private static final long serialVersionUID = 808018030183407996L;
     private static boolean isJDK14orEarlier;
     private Map<String, String> requestHeaders = new HashMap<String, String>();
@@ -211,13 +211,51 @@ public class HttpClient implements Serializable {
      * @throws
      */
     public AccessToken getOAuthAccessToken(TempCredentials token) throws FitbitAPIException {
+       throw new FitbitAPIException("oops");
+    }
+
+    /**
+     *
+     * @param token request token
+     * @return access token
+     * @throws
+     */
+    public AccessToken getOAuthAccessToken(TempCredentials token, SDKServiceProvider serviceProvider) throws FitbitAPIException {
+        LoggerService logger = serviceProvider.getLoggerService(HttpClient.class);
+        logger.debug("in http client get oauth access");
         try {
             oauthToken = token;
-            oauthToken = new AccessToken(httpRequest(HttpMethod.POST, accessTokenURL, PostParameter.EMPTY_ARRAY, true));
+            HttpResponse res = httpRequest(HttpMethod.POST, accessTokenURL,
+                    PostParameter.EMPTY_ARRAY, true, serviceProvider);
+            logger.debug("got response");
+            String body;
+            if (res == null || res.getBody() == null) {
+                throw new FitbitAPIException("null response or empty body in response");
+            }
+            body = res.getBody();
+            logger.debug("body: " + body);
+            String [] kvps = body.split("&");
+            HashMap<String, String> map = new HashMap<String, String>(3);
+            for (String kvp : kvps) {
+                String [] keyAndValue = kvp.split("=");
+                map.put(keyAndValue[0], keyAndValue[1]);
+            }
+            if (!map.containsKey("oauth_token") || !map.containsKey("oauth_token_secret")) {
+                throw new FitbitAPIException("unable to parse oauth token and secret");
+            }
+            oauthToken = new AccessToken(map.get("oauth_token"), map.get("oauth_token_secret"));
+            if (oauthToken == null) {
+                throw new FitbitAPIException("failed to parse oauth token");
+            }
+            logger.debug("access token: " + oauthToken.getToken() + " secret: " + oauthToken.getTokenSecret());
+            return (AccessToken) oauthToken;
+
+//            oauthToken = new AccessToken(res);
+//            oauthToken = new AccessToken(httpRequest(HttpMethod.POST, accessTokenURL, PostParameter.EMPTY_ARRAY, true));
         } catch (FitbitAPIException te) {
+            logger.error("exception in getOAuthAccessToken", te);
             throw new FitbitAPIException("The user has not given access to the account.", te, te.getStatusCode());
         }
-        return (AccessToken) oauthToken;
     }
 
     /**
@@ -235,6 +273,47 @@ public class HttpClient implements Serializable {
         }
         return (AccessToken) oauthToken;
     }
+
+
+    public AccessToken getOAuthAccessToken(String token, String tokenSecret, String oauth_verifier, SDKServiceProvider serviceProvider) throws FitbitAPIException {
+        LoggerService logger = serviceProvider.getLoggerService(HttpClient.class);
+        try {
+            oauthToken = new OAuthToken(token, tokenSecret) {};
+//            oauthToken = new AccessToken(httpRequest(HttpMethod.POST, accessTokenURL,
+//                    new PostParameter[]{new PostParameter("oauth_verifier", oauth_verifier)}, true));
+            HttpResponse res = httpRequest(HttpMethod.POST, accessTokenURL,
+                    new PostParameter[]{new PostParameter("oauth_verifier", oauth_verifier)}, true, serviceProvider);
+            String body;
+            if (res == null || res.getBody() == null) {
+                throw new FitbitAPIException("null response or empty body in response");
+            }
+            body = res.getBody();
+            logger.debug("body: " + body);
+            String [] kvps = body.split("&");
+            HashMap<String, String> map = new HashMap<String, String>(3);
+            for (String kvp : kvps) {
+                String [] keyAndValue = kvp.split("=");
+                map.put(keyAndValue[0], keyAndValue[1]);
+            }
+            if (!map.containsKey("oauth_token") || !map.containsKey("oauth_token_secret")) {
+                throw new FitbitAPIException("unable to parse oauth token and secret");
+            }
+            oauthToken = new AccessToken(map.get("oauth_token"), map.get("oauth_token_secret"));
+            if (oauthToken == null) {
+                throw new FitbitAPIException("failed to parse oauth token");
+            }
+            logger.debug("access token: " + oauthToken.getToken() + " secret: " + oauthToken.getTokenSecret());
+            return (AccessToken) oauthToken;
+
+//            oauthToken = new AccessToken(res);
+//            oauthToken = new AccessToken(httpRequest(HttpMethod.POST, accessTokenURL, PostParameter.EMPTY_ARRAY, true));
+        } catch (FitbitAPIException te) {
+            logger.error("exception in getOAuthAccessToken", te);
+            //throw new FitbitAPIException("The user has not given access to the account.", te, te.getStatusCode());
+            throw new FitbitAPIException("Exception thrown", te, te.getStatusCode());
+        }
+    }
+
 
     /**
      *
@@ -386,7 +465,8 @@ public class HttpClient implements Serializable {
     }
 
     public void setUserAgent(String ua) {
-        setRequestHeader("User-Agent", Configuration.getUserAgent(ua));
+        //setRequestHeader("User-Agent", Configuration.getUserAgent(ua));
+        setRequestHeader("User-Agent", "fitbitAPIClient http://wiki.fitbit.com/Fitbit-API-Java-Client /1");
     }
     public String getUserAgent(){
         return getRequestHeader("User-Agent");
@@ -436,53 +516,74 @@ public class HttpClient implements Serializable {
     protected Response httpRequest(HttpMethod method, String url, PostParameter[] postParams,
                                    boolean authenticated) throws FitbitAPIException {
         return httpRequest(method, url, postParams, authenticated);
+
     }
 
-    protected HttpResponse httpRequest(HttpMethod method, String url, PostParameter[] postParams,
+    public HttpResponse httpRequest(HttpMethod method, String url, PostParameter[] postParams,
                                    boolean authenticated, SDKServiceProvider serviceProvider) throws FitbitAPIException {
         logger = serviceProvider.getLoggerService("httpClient");
         logger.debug("HTTP " + method + " " + url);
 
         int retriedCount;
-        int retry = retryCount + 1;
+//        int retry = retryCount + 1;
+        int retry = 1;
         HttpResponse resp = null;
 
         for (retriedCount = 0; retriedCount < retry; retriedCount++) {
             int responseCode = -1;
             try {
                 HttpService http = serviceProvider.getHttpService();
+                HashSet<Header> headers = getHeaders(method, url, postParams, authenticated);
+                String postParam = null;
+//                for (PostParameter param: postParams) {
+//                    logger.debug("Param: '" + param.getName()+ "' => '" + param.getValue() + "'");
+//                }
+                if (postParams != null) {
 
-                HashSet<Header> headers = new HashSet<com.stackmob.sdkapi.http.Header>();
-                com.stackmob.sdkapi.http.Header formHeader = new com.stackmob.sdkapi.http.Header("Content-Type", "application/x-www-form-urlencoded");
-                headers.add(formHeader);
-                    String postParam = null;
-                    if (postParams != null) {
-                        postParam = encodeParameters(postParams);
-                        logger.debug("HTTP Post Params: " + postParam);
-                        byte[] bytes = postParam.getBytes("UTF-8");
-                        //create the HTTP request
+                    com.stackmob.sdkapi.http.Header header = new com.stackmob.sdkapi.http.Header("Content-Type", "application/x-www-form-urlencoded");
+                    headers.add(header);
+                    postParam = encodeParameters(postParams);
+                    byte[] bytes = postParam.getBytes("UTF-8");
+                    header = new com.stackmob.sdkapi.http.Header("Content-Length", Integer.toString(bytes.length));
+                    headers.add(header);
+//                    headers.remove("X-Fitbit-Client-Version");
+//                    headers.remove("User-Agent");
+//                    headers.remove("X-Fitbit-Client-URL");
+//                    headers.add(new Header("X-Fitbit-Client-URL", "http://wiki.fitbit.com/Fitbit-API-Java-Client"));
+//                    headers.add(new Header("X-Fitbit-Client-Version", "1"));
+//                    headers.add(new Header("User-Agent", "fitbitAPIClient http://wiki.fitbit.com/Fitbit-API-Java-Client /1"));
+                    headers.add(new Header("Cache-Control", "no-cache"));
+                    headers.add(new Header("Host", "api.fitbit.com"));
+                    logger.debug("HTTP Post Params: " + postParam);
+                    //create the HTTP request
 //                        logger.debug("adding auth headers");
-                        headers.addAll(getHeaders(method, url, postParams, authenticated));
+                }
+
+                    logger.debug("Request headers ========================================");
+
+                    for (Header header : headers) {
+                        if (header != null) {
+                            logger.debug(header.getName() + " " + header.getValue());
+                        }
                     }
-
-//                    logger.debug("Request headers ========================================");
-
-//                    for (Header header : headers) {
-//                        if (header != null) {
-//                            logger.debug("Header: '" + header.getName() + "' => '" + header.getValue() + "'");
-//                        }
-//                    }
-//                    logger.debug("------------------------------------------");
-                    PostRequest req = new PostRequest(url, headers, postParam);
+                    logger.debug("------------------------------------------");
                     //send the request. this method call will not return until the server at http://stackmob.com returns.
                     //note that this method may throw AccessDeniedException if the URL is whitelisted or rate limited,
                     //or TimeoutException if the server took too long to return
-                    resp = http.post(req);
+
+                    if (method == HttpMethod.POST) {
+                        PostRequest req = new PostRequest(url, headers, postParam);
+                        resp = http.post(req);
+                    } else
+                    if (method == HttpMethod.GET) {
+                        GetRequest getReq = new GetRequest(url, headers);
+                        resp = http.get(getReq);
+                    }
                     if (resp == null) {
                         throw new FitbitAPIException("null response wtf");
                     }
                     responseCode = resp.getCode();
-                    logger.debug("resp code: " + responseCode);
+                    logger.debug("resp code: " + responseCode + " body: " + resp.getBody());
 //                    logger.debug("Response headers ========================================");
                     Set<Header> responseHeaders = resp.getHeaders();
 //                    for (Header header : responseHeaders) {
@@ -497,7 +598,7 @@ public class HttpClient implements Serializable {
                         break;
                     } else {
                         if (responseCode < INTERNAL_SERVER_ERROR || retriedCount == retryCount) {
-                            throw new FitbitAPIException("Some unknown error");
+                           // throw new FitbitAPIException("Some unknown error");
                         }
                         // will retry if the status code is INTERNAL_SERVER_ERROR
                     }
@@ -509,18 +610,19 @@ public class HttpClient implements Serializable {
 
             } catch (Exception ioe) {
                 // connection timeout or read timeout
-                if (retriedCount == retryCount) {
-                    throw new FitbitAPIException(ioe.getMessage()); // TODO: remove this
+                logger.error("io error", ioe);
+                //if (retriedCount == retryCount) {
+                //    throw new FitbitAPIException(ioe.getMessage()); // TODO: remove this
                 }
             }
-            try {
-                logger.debug("Sleeping " + retryIntervalMillis + " millisecs for next retry.");
-                Thread.sleep(retryIntervalMillis);
-            } catch (InterruptedException ignore) {
-                //nothing to do
-                throw new FitbitAPIException(ignore.getMessage()); // TODO: remove this
-            }
-        }
+//            try {
+//                logger.debug("Sleeping " + retryIntervalMillis + " millisecs for next retry.");
+//                Thread.sleep(10);//retryIntervalMillis);
+//            } catch (InterruptedException ignore) {
+//                logger.error("io error", ignore);
+//                //nothing to do
+//                throw new FitbitAPIException(ignore.getMessage()); // TODO: remove this
+//            }
         return resp;
     }
 

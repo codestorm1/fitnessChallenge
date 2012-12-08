@@ -378,7 +378,7 @@
                               {"name":"19th and Noriega","location":{"lon":-122.47653,"lat":37.754226}},
                               {"name":"Sunset and Taraval","location":{"lon":-122.494726,"lat":37.742112}},
                               {"name":"19th and Taraval","location":{"lon":-122.475758,"lat":37.743164}},
-                              {"name":"Inside Box","location":{"lon":-122.48374,"lat":37.749815}}
+                              {"name":"Inside Box","location":{"lon":-122.48374,"lat":37.749815}},
                               ];
 
           _.each(attrs, function(attr) {

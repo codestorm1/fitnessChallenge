@@ -44,13 +44,17 @@ public class HelloWorld implements CustomCodeMethod {
 
   @Override
   public List<String> getParams() {
-    return new ArrayList<String>();
+    //return new ArrayList<String>();
+      ArrayList<String> params = new ArrayList<String>();
+      params.add("test");
+      return params;
   }
 
   @Override
   public ResponseToProcess execute(ProcessedAPIRequest request, SDKServiceProvider serviceProvider) {
     Map<String, Object> map = new HashMap<String, Object>();
-    map.put("msg", "Hello, Bryan's world!");
+    String test = request.getParams().get("test");
+    map.put("msg", "Hello, " + test + "'s world!");
     return new ResponseToProcess(HttpURLConnection.HTTP_OK, map);
   }
 

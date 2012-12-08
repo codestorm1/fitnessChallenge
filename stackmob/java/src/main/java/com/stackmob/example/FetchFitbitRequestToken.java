@@ -31,7 +31,7 @@ import java.net.HttpURLConnection;
 import java.util.*;
 
 
-public class GetFitbitRequestToken implements CustomCodeMethod {
+public class FetchFitbitRequestToken implements CustomCodeMethod {
 
 
     private static final String fitbitSiteBaseUrl = "http://www.fitbit.com";
@@ -43,7 +43,7 @@ public class GetFitbitRequestToken implements CustomCodeMethod {
 
     @Override
   public String getMethodName() {
-    return "get_fitbit_request_token";
+    return "fetch_fitbit_request_token";
   }
 
   @Override
@@ -53,7 +53,7 @@ public class GetFitbitRequestToken implements CustomCodeMethod {
 
   @Override
   public ResponseToProcess execute(ProcessedAPIRequest request, SDKServiceProvider serviceProvider) {
-      logger = serviceProvider.getLoggerService(GetFitbitRequestToken.class);
+      logger = serviceProvider.getLoggerService(FetchFitbitRequestToken.class);
       Map<String, Object> map = new HashMap<String, Object>();
 
       Map<String,String> params = request.getParams();
@@ -68,7 +68,6 @@ public class GetFitbitRequestToken implements CustomCodeMethod {
           TempCredentials credentials = agent.getOAuthTempToken("http://localhost:4567", serviceProvider);
           map.put("oauth_token", credentials.getToken());
           map.put("oauth_token_secret", credentials.getTokenSecret());
-          logger.debug("returning tokens");
       }
       catch (FitbitAPIException e) {
           logger.debug("FITBIT API exception");

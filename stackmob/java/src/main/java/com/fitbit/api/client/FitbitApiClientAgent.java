@@ -24,6 +24,7 @@ import com.fitbit.api.common.model.user.UserInfo;
 import com.fitbit.api.common.service.FitbitApiService;
 import com.fitbit.api.model.*;
 import com.stackmob.sdkapi.SDKServiceProvider;
+import com.stackmob.sdkapi.http.response.HttpResponse;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
@@ -198,10 +199,13 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
      * @see <a href="http://wiki.fitbit.com/OAuth-Authenticaion-API">Fitbit API: OAuth-Authentication-API</a>
      * @see <a href="http://oauth.net/core/1.0/#auth_step2">OAuth Core 1.0 - 6.2.  Obtaining User Authorization</a>
      */
+    public synchronized AccessToken getOAuthAccessToken(String token, String tokenSecret, String oauth_verifier, SDKServiceProvider serviceProvider) throws FitbitAPIException {
+        return http.getOAuthAccessToken(token, tokenSecret, oauth_verifier, serviceProvider);
+    }
+
     public synchronized AccessToken getOAuthAccessToken(String token, String tokenSecret, String oauth_verifier) throws FitbitAPIException {
         return http.getOAuthAccessToken(token, tokenSecret, oauth_verifier);
     }
-
     /**
      * Sets the access token
      *
@@ -2067,6 +2071,39 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
         }
     }
 
+    /**
+     * Get a user's profile
+     *
+     * @param localUser authorized user
+     * @param fitbitUser user to retrieve data from
+     *
+     * @return profile of a user
+     *
+     * @throws com.fitbit.api.FitbitAPIException Fitbit API Exception
+     * @see <a href="http://wiki.fitbit.com/display/API/API-Get-User-Info">Fitbit API: API-Get-User-Info</a>
+     */
+    public UserInfo getUserInfoSM(LocalUserDetail localUser, FitbitUser fitbitUser, SDKServiceProvider serviceProvider) throws FitbitAPIException {
+        setAccessToken(localUser);
+        // Example: GET /1/user/-/profile.json
+        String url = APIUtil.contextualizeUrl(getApiBaseUrl(), getApiVersion(), "/user/" + fitbitUser.getId() + "/profile", APIFormat.JSON);
+
+        try {
+
+
+            Boolean authenticated = true;
+            HttpClient http = new HttpClient();
+            HttpResponse response = http.httpRequest(HttpClient.HttpMethod.GET, null, PostParameter.EMPTY_ARRAY, authenticated, serviceProvider);
+            //throwExceptionIfError(response);
+            //return new UserInfo(response.asJSONObject());
+//            throw new FitbitAPIException("not done yet ");
+            return null;
+        } catch (FitbitAPIException e) {
+            throw new FitbitAPIException("Error getting user info: " + e, e);
+        }
+//        } catch (JSONException e) {
+//            throw new FitbitAPIException("Error getting user info: " + e, e);
+//        }
+    }
     /**
      * Update user's profile
      *

@@ -74,7 +74,9 @@ class FitbitAPIClientSupport {
      * @param version client version
      */
     public void setClientVersion(String version){
-        setRequestHeader("X-Fitbit-Client-Version", Configuration.getClientVersion(version));
+//        setRequestHeader("X-Fitbit-Client-Version", Configuration.getClientVersion(version));
+        setRequestHeader("X-Fitbit-Client-Version", "1");
+
     }
 
     /**
@@ -91,7 +93,8 @@ class FitbitAPIClientSupport {
      * @param clientURL client URL
      */
     public void setClientURL(String clientURL){
-        setRequestHeader("X-Fitbit-Client-URL", Configuration.getClientURL(clientURL));
+        //setRequestHeader("X-Fitbit-Client-URL", Configuration.getClientURL(clientURL));
+        setRequestHeader("X-Fitbit-Client-URL", "http://wiki.fitbit.com/Fitbit-API-Java-Client");
     }
 
     /**

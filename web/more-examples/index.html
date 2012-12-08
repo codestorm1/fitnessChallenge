@@ -12,14 +12,19 @@
   <!-- Example Code -->
   <script type="text/javascript">
     // Find your info here: https://www.stackmob.com/platform/account/apps/reset
-    StackMob.init({
-      appName: 'js_smoketests',
-      clientSubdomain: 'stackmob',
-      publicKey: 'efe84550-16eb-4598-82f8-27fdae21df0c',
-      apiVersion: 0
-    });
+//    StackMob.init({
+//      appName: 'js_smoketests',
+//      clientSubdomain: 'stackmob',
+//      publicKey: 'efe84550-16eb-4598-82f8-27fdae21df0c',
+//      apiVersion: 0
+//    });
 
-    // Show alert if StackMob has not been initialized
+    StackMob.init({
+        appName: "test",
+        clientSubdomain: "twistedogregmailcom",
+        publicKey: "1104a462-1a84-47ab-b3c9-5eb42532dd32",
+        apiVersion: 0
+    });
     $(document).ready(function () {
       if (StackMob.publicKey == "your public key") {
         $("#init").show();
