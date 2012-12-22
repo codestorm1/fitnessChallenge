@@ -96,10 +96,10 @@ public class FetchFitbitAccessToken implements CustomCodeMethod {
           AccessToken accessToken = agent.getOAuthAccessToken(tempTokenReceived, tempTokenSecret, tempTokenVerifier, serviceProvider);
 
           //AccessToken credentials = tempCredentials.getAccessToken(serviceProvider);
-          logger.debug("got access token!!?!?!?!");
           map.put("oauth_token", accessToken.getToken());
           map.put("oauth_token_secret", accessToken.getTokenSecret());
-          logger.debug("returning access tokens? ==================================================");
+          map.put("fitbit_user_id", accessToken.getEncodedUserId());
+          logger.debug("returning access tokens ==================================================");
           return new ResponseToProcess(HttpURLConnection.HTTP_OK, map);
       }
       catch (FitbitAPIException e) {

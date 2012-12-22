@@ -18,6 +18,10 @@ public class APIResourceCredentials {
     String resourceURL;
     String localUserId;
 
+    public APIResourceCredentials(String localUserId) {
+        this.localUserId = localUserId;
+    }
+
     public APIResourceCredentials(String localUserId, String tempToken, String tempTokenSecret) {
         this.localUserId = localUserId;
         this.tempToken = tempToken;

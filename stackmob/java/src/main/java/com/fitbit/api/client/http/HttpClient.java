@@ -227,7 +227,6 @@ public class HttpClient implements Serializable {
             oauthToken = token;
             HttpResponse res = httpRequest(HttpMethod.POST, accessTokenURL,
                     PostParameter.EMPTY_ARRAY, true, serviceProvider);
-            logger.debug("got response");
             String body;
             if (res == null || res.getBody() == null) {
                 throw new FitbitAPIException("null response or empty body in response");
@@ -243,11 +242,10 @@ public class HttpClient implements Serializable {
             if (!map.containsKey("oauth_token") || !map.containsKey("oauth_token_secret")) {
                 throw new FitbitAPIException("unable to parse oauth token and secret");
             }
-            oauthToken = new AccessToken(map.get("oauth_token"), map.get("oauth_token_secret"));
+            oauthToken = new AccessToken(map.get("oauth_token"), map.get("oauth_token_secret"), map.get("encoded_user_id"));
             if (oauthToken == null) {
                 throw new FitbitAPIException("failed to parse oauth token");
             }
-            logger.debug("access token: " + oauthToken.getToken() + " secret: " + oauthToken.getTokenSecret());
             return (AccessToken) oauthToken;
 
 //            oauthToken = new AccessToken(res);
@@ -298,7 +296,7 @@ public class HttpClient implements Serializable {
             if (!map.containsKey("oauth_token") || !map.containsKey("oauth_token_secret")) {
                 throw new FitbitAPIException("unable to parse oauth token and secret");
             }
-            oauthToken = new AccessToken(map.get("oauth_token"), map.get("oauth_token_secret"));
+            oauthToken = new AccessToken(map.get("oauth_token"), map.get("oauth_token_secret"), map.get("encoded_user_id"));
             if (oauthToken == null) {
                 throw new FitbitAPIException("failed to parse oauth token");
             }
