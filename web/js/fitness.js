@@ -117,7 +117,6 @@ var fitness = fitness || {
         var access_token = localStorage.getItem("access_token");
         var access_token_secret = localStorage.getItem("access_token_secret");
         var fitbit_user_id = localStorage.getItem("fitbit_user_id");
-        this.stackmobUserID = localStorage.getItem("stackmobUserID");
 
         var results;
         StackMob.customcode('fetch_fitbit_user', {"access_token" : access_token, "access_token_secret" : access_token_secret, "fitbit_user_id" : fitbit_user_id}, 'GET', {
@@ -167,10 +166,11 @@ var fitness = fitness || {
             $('#results').html('failed to fetch fitbit user');
             return;
         }
-        fitbitUser.username = fitbitUser.displayName;
+
+        fitbitUser.username = fitness.stackmobUserID.toString();
+        localStorage.setItem('display_name', fitbitUser.displayName);
+
         var user = new StackMob.User(fitbitUser);
-        user.stackmobUserID = fitness.stackmobUserID;
-        user.username = fitbitUser.displayName;
         console.debug(user.toJSON());
         user.create({
             success: function(model) {
@@ -197,7 +197,7 @@ var fitness = fitness || {
                 that.getNextUserID(function(result, currentUserID) {
                     if (result) {
                         fitness.stackmobUserID = currentUserID;
-                        localStorage.setItem('stackmobUserID', currentUserID);
+                        localStorage.setItem('stackmob_user_id', currentUserID);
                         that.getFitbitUser(that.saveUserToStackmob);
                     }
                     else {
@@ -218,8 +218,18 @@ var fitness = fitness || {
             });
         this.bindEvents();
 
-        if (window.location.href.indexOf('oauth_token') !== -1) {
-            this.getFitbitAccessToken();
+        this.stackmobUserID = localStorage.getItem("stackmob_user_id");
+        this.displayName = localStorage.getItem("display_name");
+        if (this.stackmobUserID && this.displayName) {
+            $('#authorize_link').hide();
+            $('#get_user_link').hide();
+            $('#results').html('Hello ' + this.displayName + '!');
+        }
+        else {
+            if (window.location.href.indexOf('oauth_token') !== -1) {
+                $('#authorize_link').hide();
+                this.getFitbitAccessToken();
+            }
         }
     }
 };
