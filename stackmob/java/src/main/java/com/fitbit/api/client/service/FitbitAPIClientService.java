@@ -80,7 +80,7 @@ public class FitbitAPIClientService<C extends FitbitApiClientAgent> {
     public String getResourceOwnerAuthorizationURL(LocalUserDetail user, String callbackURL) throws FitbitAPIException {
         // Get temporary credentials. Include callback URL which the Fitbit API service will save and redirect to when
         // the user authorizes.
-        TempCredentials tempCredentials = client.getOAuthTempToken(callbackURL, null);
+        TempCredentials tempCredentials = client.getOAuthTempToken(callbackURL);
         // Create and save temporary resource credentials:
         APIResourceCredentials resourceCredentials = new APIResourceCredentials(user.getUserId(), tempCredentials.getToken(), tempCredentials.getTokenSecret());
         saveResourceCredentials(user, resourceCredentials);

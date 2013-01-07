@@ -90,6 +90,8 @@ var fitness = fitness || {
                     results += key + ": " + jsonResult[key] + '<br>\n';
                 }
                 $('#results').html(results);
+                localStorage.removeItem('request_token');
+                localStorage.removeItem('request_token_secret');
             },
 
             error: function(jsonResult) {
@@ -158,6 +160,45 @@ var fitness = fitness || {
 
     },
 
+
+    getFitbitFriends : function(stackmob_user_id, callback) {
+
+        var results;
+        StackMob.customcode('fetch_fitbit_friends', {"stackmob_user_id" : stackmob_user_id}, 'GET', {
+            success: function(jsonResult) {
+                results = 'got friends!<br/>\n';
+                var friendsResponse = jsonResult['friendsJson'];
+                var friends = JSON.parse(userInfoResponse)['friends'];
+
+                var len = friends.length;
+                var friend;
+                for (var i = 0; i < len; i++) {
+                    friend = friends[i];
+                    for (var key in friend) {
+                        results += key + ": " + friend[key] + '<br>\n';
+                    }
+                }
+                $('#results').html(results);
+                if (typeof callback === "function") {
+                    callback(true, friends);
+                }
+            },
+
+            error: function(jsonResult) {
+                results = 'call failed, no friends returned<br/>\n';
+                for (var key in jsonResult) {
+                    results += key + ": " + jsonResult[key] + '<br>\n'
+                }
+                $('#results').html(results);
+                if (typeof callback === "function") {
+                    callback(false, jsonResult);
+                }
+            }
+        });
+
+    },
+
+
     saveUserToStackmob : function(success, fitbitUser) {
         //var User = StackMob.Model.extend({ schemaName: 'user' });
         //var user = new User(fitbitUser);
@@ -168,13 +209,16 @@ var fitness = fitness || {
         }
 
         fitbitUser.username = fitness.stackmobUserID.toString();
+        fitbitUser.access_token = localStorage.getItem("access_token");
+        fitbitUser.access_token_secret = localStorage.getItem("access_token_secret");
+        fitbitUser.fitbit_user_id = localStorage.getItem("fitbit_user_id");
         localStorage.setItem('display_name', fitbitUser.displayName);
 
         var user = new StackMob.User(fitbitUser);
         console.debug(user.toJSON());
         user.create({
             success: function(model) {
-                console.debug('user object is saved, todo_id: ');// + model.get('todo_id') + ', title: ' + model.get('title'));
+                console.debug('user object is saved');
                 $('#results').html('user saved to datastore!');
 
             },
@@ -182,12 +226,48 @@ var fitness = fitness || {
                 console.debug(response);
                 $('#results').html('failed to save user to datastore');
             }
-        });    },
+        });
+    },
+
+    saveFriendsToStackmob : function(success, fitbitUser) {
+        if (!success) {
+            $('#results').html('can\'t save friends - failed to fetch friends');
+            return;
+        }
+
+        fitbitUser.username = fitness.stackmobUserID.toString();
+        fitbitUser.access_token = localStorage.getItem("access_token");
+        fitbitUser.access_token_secret = localStorage.getItem("access_token_secret");
+        fitbitUser.fitbit_user_id = localStorage.getItem("fitbit_user_id");
+        localStorage.setItem('display_name', fitbitUser.displayName);
+
+        var user = new StackMob.User(fitbitUser);
+        console.debug(user.toJSON());
+        user.create({
+            success: function(model) {
+                console.debug('user object is saved');
+                $('#results').html('user saved to datastore!');
+
+            },
+            error: function(model, response) {
+                console.debug(response);
+                $('#results').html('failed to save user to datastore');
+            }
+        });
+    },
+
+    clearLocalStorage : function() {
+        localStorage.clear();
+        window.href.reload();
+    },
 
     bindEvents : function() {
         var that = this;
         $('#authorize_link').on('click', function() {
             that.getFitbitRequestToken();
+        });
+        $('#clear_link').on('click', function() {
+            that.clearLocalStorage();
         });
         $('#get_user_link').on('click', function() {
             if (fitness.stackmobUserID) {
@@ -204,6 +284,14 @@ var fitness = fitness || {
                         $('#results').html('Failed to get next StackMob user ID');
                     }
                 });
+            }
+        });
+        $('#get_friends_link').on('click', function() {
+            if (fitness.stackmobUserID) {
+                that.getFitbitFriends(that.saveFriendToStackmob);
+            }
+            else {
+                $('#results').html('Create a StackMob user ID first');
             }
         });
     },
@@ -228,6 +316,7 @@ var fitness = fitness || {
         else {
             if (window.location.href.indexOf('oauth_token') !== -1) {
                 $('#authorize_link').hide();
+                $('#clear_link').hide();
                 this.getFitbitAccessToken();
             }
         }

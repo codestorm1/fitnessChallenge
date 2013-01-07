@@ -46,7 +46,7 @@ public class Configuration {
         defaultProperty = new Properties();
         defaultProperty.setProperty("fitbitAPIClient.debug", "false");
         defaultProperty.setProperty("fitbitAPIClient.source", "fitbitAPIClient");
-        //defaultProperty.setProperty("fitbitAPIClient.clientVersion","");
+        defaultProperty.setProperty("fitbitAPIClient.clientVersion","1");
         defaultProperty.setProperty("fitbitAPIClient.clientURL", "http://wiki.fitbit.com/Fitbit-API-Java-Client");
         defaultProperty.setProperty("fitbitAPIClient.http.userAgent", "fitbitAPIClient http://wiki.fitbit.com/Fitbit-API-Java-Client /1");
         //defaultProperty.setProperty("fitbitAPIClient.user","");
@@ -65,7 +65,7 @@ public class Configuration {
         //defaultProperty.setProperty("fitbitAPIClient.oauth.consumerKey","");
         //defaultProperty.setProperty("fitbitAPIClient.oauth.consumerSecret","");
         defaultProperty.setProperty("fitbitAPIClient.async.numThreads", "1");
-        defaultProperty.setProperty("fitbitAPIClient.clientVersion", Version.getVersion());
+        //defaultProperty.setProperty("fitbitAPIClient.clientVersion", Version.getVersion());
         try {
             // Android platform should have dalvik.system.VMRuntime in the classpath.
             // @see http://developer.android.com/reference/dalvik/system/VMRuntime.html

@@ -27,8 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.fitbit.api.client.http;
 
 import com.fitbit.api.FitbitAPIException;
-
 import com.fitbit.api.client.Configuration;
+import com.stackmob.sdkapi.http.Header;
+import com.stackmob.sdkapi.http.response.HttpResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -41,13 +42,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.HttpURLConnection;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -78,34 +76,40 @@ public class Response {
     private Document responseAsDocument;
     private String responseAsString;
     protected InputStream is;
-    private HttpURLConnection con;
+    //private HttpURLConnection con;
+    private HttpResponse httpResponse;
     private boolean streamConsumed;
+    private HashMap<String, String> headerMap;
 
-
-    public Response(HttpURLConnection con) throws IOException {
-        this.con = con;
-        statusCode = con.getResponseCode();
-        is = con.getErrorStream();
-        if (null == is) {
-            is = con.getInputStream();
-        }
-        if (null != is && "gzip".equals(con.getContentEncoding())) {
-            // the response is gzipped
-            is = new GZIPInputStream(is);
-        }
+//    public Response(HttpResponse httpResponse) throws IOException {
+    public Response(HttpResponse httpResponse) {
+        this.httpResponse = httpResponse;
+        statusCode = httpResponse.getCode();
+//        is = con.getErrorStream();
+//        if (null == is) {
+//            is = con.getInputStream();
+//        }
+//        if (null != is && "gzip".equals(con.getContentEncoding())) {
+//            // the response is gzipped
+//            is = new GZIPInputStream(is);
+//        }
     }
 
-    // for test purposes
-    /*package*/
-
     protected Response() { }
-    
+
     public int getStatusCode() {
         return statusCode;
     }
 
     public String getResponseHeader(String name) {
-        return con.getHeaderField(name);
+        if (headerMap == null) {
+            headerMap = new HashMap<String, String>();
+            Set<Header> headers = httpResponse.getHeaders();
+            for (Header header : headers) {
+                headerMap.put(header.getName(), header.getValue());
+            }
+        }
+        return headerMap.get(name);
     }
 
     /**
@@ -116,53 +120,60 @@ public class Response {
      * Disconnects the internal HttpURLConnection silently.
      *
      * @return response body stream
-     * @throws FitbitAPIException
+     * @throws com.fitbit.api.FitbitAPIException
      * @see #disconnect()
      */
-    public InputStream asStream() {
-        if (streamConsumed) {
-            throw new IllegalStateException("Stream has already been consumed.");
-        }
-        return is;
-    }
+//    public InputStream asStream() {
+//        if (streamConsumed) {
+//            throw new IllegalStateException("Stream has already been consumed.");
+//        }
+//        return is;
+//    }
 
     /**
      * Returns the response body as string.<br>
      * Disconnects the internal HttpURLConnection silently.
      *
      * @return response body
-     * @throws FitbitAPIException
+     * @throws com.fitbit.api.FitbitAPIException
      */
     public String asString() throws FitbitAPIException {
-        if (null == responseAsString) {
-            BufferedReader br;
-            try {
-                InputStream stream = asStream();
-                if (null == stream) {
-                    return null;
-                }
-                br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-                StringBuffer buf = new StringBuffer();
-                String line;
-                while (null != (line = br.readLine())) {
-                    buf.append(line).append('\n');
-                }
-                responseAsString = buf.toString();
-                if (Configuration.isDalvik()) {
-                    responseAsString = unescape(responseAsString);
-                }
-                log.debug("Response string: " + responseAsString);
-                stream.close();
-                disconnect();
-                streamConsumed = true;
-            } catch (NullPointerException npe) {
-                // don't remember in which case npe can be thrown
-                throw new FitbitAPIException(npe.getMessage(), npe);
-            } catch (IOException ioe) {
-                throw new FitbitAPIException(ioe.getMessage(), ioe);
+        if (responseAsString == null) {
+            if (httpResponse == null) {
+                return null;
             }
+            responseAsString = httpResponse.getBody();
         }
         return responseAsString;
+//            BufferedReader br;
+//            try {
+//                InputStream stream = asStream();
+//                if (null == stream) {
+//                    return null;
+//                }
+//                br = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+//                StringBuffer buf = new StringBuffer();
+//                String line;
+//
+//                while (null != (line = br.readLine())) {
+//                    buf.append(line).append('\n');
+//                }
+//                responseAsString = buf.toString();
+//                if (Configuration.isDalvik()) {
+//                    responseAsString = unescape(responseAsString);
+//                }
+//                log.debug("Response string: " + responseAsString);
+//                stream.close();
+//                disconnect();
+//                streamConsumed = true;
+//            } catch (NullPointerException npe) {
+//                // don't remember in which case npe can be thrown
+//                throw new FitbitAPIException(npe.getMessage(), npe);
+//            } catch (IOException ioe) {
+//                throw new FitbitAPIException(ioe.getMessage(), ioe);
+//            }
+//        }
+//        return responseAsString;
     }
 
     /**
@@ -170,7 +181,7 @@ public class Response {
      * Disconnects the internal HttpURLConnection silently.
      *
      * @return response body as org.w3c.dom.Document
-     * @throws FitbitAPIException
+     * @throws com.fitbit.api.FitbitAPIException
      */
     public Document asDocument() throws FitbitAPIException {
         if (null == responseAsDocument) {
@@ -192,7 +203,7 @@ public class Response {
      * Disconnects the internal HttpURLConnection silently.
      *
      * @return response body as org.json.JSONObject
-     * @throws FitbitAPIException
+     * @throws com.fitbit.api.FitbitAPIException
      */
     public JSONObject asJSONObject() throws FitbitAPIException {
         try {
@@ -207,7 +218,7 @@ public class Response {
      * Disconnects the internal HttpURLConnection silently.
      *
      * @return response body as org.json.JSONArray
-     * @throws FitbitAPIException
+     * @throws com.fitbit.api.FitbitAPIException
      */
     public JSONArray asJSONArray() throws FitbitAPIException {
         try {
@@ -217,16 +228,16 @@ public class Response {
         }
     }
 
-    public InputStreamReader asReader() {
-        try {
-            return new InputStreamReader(is, "UTF-8");
-        } catch (UnsupportedEncodingException uee) {
-            return new InputStreamReader(is);
-        }
-    }
+//    public InputStreamReader asReader() {
+//        try {
+//            return new InputStreamReader(is, "UTF-8");
+//        } catch (UnsupportedEncodingException uee) {
+//            return new InputStreamReader(is);
+//        }
+//    }
 
     public void disconnect() {
-        con.disconnect();
+//        con.disconnect();
     }
 
     private static Pattern escaped = Pattern.compile("&#([0-9]{3,5});");
@@ -260,7 +271,7 @@ public class Response {
                 ", response=" + responseAsDocument +
                 ", responseString='" + responseAsString + '\'' +
                 ", is=" + is +
-                ", con=" + con +
+//                ", con=" + con +
                 '}';
     }
 

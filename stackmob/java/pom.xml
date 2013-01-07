@@ -22,7 +22,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.roflcode</groupId>
   <artifactId>fitnessChallenge</artifactId>
-  <packaging>jar</packaging>
+    <packaging>jar</packaging>
   <version>0.6</version>
  
   <properties>
@@ -79,12 +79,13 @@
     <finalName>${project.artifactId}-${project.version}</finalName>
     <plugins>
         <plugin>
+            <version>2.4</version>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
             <configuration>
                 <archive>
                     <manifest>
-                        <mainClass>com.stackmob.example.helloworld.EntryPointExtender</mainClass>
+                        <mainClass>com.roflcode.fitnessChallenge.EntryPointExtender</mainClass>
                     </manifest>
                 </archive>
             </configuration>
@@ -111,7 +112,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.stackmob.example.EntryPointExtender</mainClass>
+                  <mainClass>com.roflcode.fitnessChallenge.EntryPointExtender</mainClass>
                 </transformer>
               </transformers>
               <createDependencyReducedPom>false</createDependencyReducedPom>

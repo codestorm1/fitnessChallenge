@@ -27,8 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package com.fitbit.api.client.http;
 
 import com.fitbit.api.FitbitAPIException;
-import com.stackmob.sdkapi.LoggerService;
-import com.stackmob.sdkapi.SDKServiceProvider;
+import com.stackmob.sdkapi.http.response.HttpResponse;
 
 /**
  * Follows the naming convention used at
@@ -47,16 +46,15 @@ import com.stackmob.sdkapi.SDKServiceProvider;
  *    enable it to access the resource owner's protected resources.
  */
 public class TempCredentials extends OAuthToken {
-    private HttpClient httpClient;
+    private HttpClientStackMob httpClient;
     private static final long serialVersionUID = -8214365845469757952L;
-    private static LoggerService logger;
 
-    TempCredentials(Response res, HttpClient httpClient) throws FitbitAPIException {
+    TempCredentials(Response res, HttpClientStackMob httpClient) throws FitbitAPIException {
         super(res);
         this.httpClient = httpClient;
     }
 
-    public TempCredentials(String token, String tokenSecret) {
+    TempCredentials(String token, String tokenSecret) {
         super(token, tokenSecret);
     }
 
@@ -68,13 +66,8 @@ public class TempCredentials extends OAuthToken {
         return httpClient.getAuthenticationRL() + "?oauth_token=" + getToken();
     }
 
-    public AccessToken getAccessToken(SDKServiceProvider serviceProvider) throws FitbitAPIException {
-        logger = serviceProvider.getLoggerService(TempCredentials.class);
-        logger.debug("temp creds get access");
-        if (this != null) {
-            logger.debug("this is not null");
-        }
-        return httpClient.getOAuthAccessToken(this, serviceProvider);
+    public AccessToken getAccessToken() throws FitbitAPIException {
+        return httpClient.getOAuthAccessToken(this);
     }
 
     @Override

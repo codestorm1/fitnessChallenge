@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="lib1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/org.apache.commons.lang-2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/org.apache.commons.logging-1.1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/servlet-api-2.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/json-20090211.jar!/" />
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/commons-lang-2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/annotations-1.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/commons-logging-1.1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/stackmob/lib/joda-time-2.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

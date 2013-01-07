@@ -26,10 +26,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package com.fitbit.api.client;
 
+import com.fitbit.api.client.http.HttpClientStackMob;
+import com.stackmob.sdkapi.LoggerService;
+import com.stackmob.sdkapi.SDKServiceProvider;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.fitbit.api.client.http.HttpClient;
+//import com.fitbit.api.client.http.HttpClient;
+import com.fitbit.api.client.http.HttpClientStackMob;
 
 /**
  * @author Yusuke Yamamoto - yusuke at mac.com
@@ -37,15 +41,20 @@ import com.fitbit.api.client.http.HttpClient;
 class FitbitAPIClientSupport {
 	protected Log log = LogFactory.getLog(getClass());
 
-	protected HttpClient http = new HttpClient();
+	//protected HttpClient http = new HttpClient();
+    protected SDKServiceProvider serviceProvider;
+    protected HttpClientStackMob http;
+    protected static LoggerService logger;
     protected String source = Configuration.getSource();
     protected final boolean USE_SSL;
 
-    public FitbitAPIClientSupport(){
-        this(null, null);
-    }
+//    public FitbitAPIClientSupport(){
+//        this(null, null, null);
+//    }
 
-    FitbitAPIClientSupport(String userId, String password){
+    FitbitAPIClientSupport(String userId, String password, SDKServiceProvider serviceProvider){
+        this.serviceProvider = serviceProvider;
+        this.http = new HttpClientStackMob(serviceProvider);
         USE_SSL = Configuration.useSSL();
         setClientVersion(null);
         setClientURL(null);
@@ -74,9 +83,7 @@ class FitbitAPIClientSupport {
      * @param version client version
      */
     public void setClientVersion(String version){
-//        setRequestHeader("X-Fitbit-Client-Version", Configuration.getClientVersion(version));
-        setRequestHeader("X-Fitbit-Client-Version", "1");
-
+        setRequestHeader("X-Fitbit-Client-Version", "1");//Configuration.getClientVersion(version));
     }
 
     /**
@@ -93,8 +100,7 @@ class FitbitAPIClientSupport {
      * @param clientURL client URL
      */
     public void setClientURL(String clientURL){
-        //setRequestHeader("X-Fitbit-Client-URL", Configuration.getClientURL(clientURL));
-        setRequestHeader("X-Fitbit-Client-URL", "http://wiki.fitbit.com/Fitbit-API-Java-Client");
+        setRequestHeader("X-Fitbit-Client-URL", Configuration.getClientURL(clientURL));
     }
 
     /**

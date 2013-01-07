@@ -23,9 +23,10 @@ import com.fitbit.api.common.model.user.FriendStats;
 import com.fitbit.api.common.model.user.UserInfo;
 import com.fitbit.api.common.service.FitbitApiService;
 import com.fitbit.api.model.*;
+import com.stackmob.core.ServiceNotActivatedException;
 import com.stackmob.sdkapi.LoggerService;
 import com.stackmob.sdkapi.SDKServiceProvider;
-import com.stackmob.sdkapi.http.response.HttpResponse;
+import com.stackmob.sdkapi.http.HttpService;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
@@ -59,9 +60,9 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
     /**
      * Default constructor. Creates FitbitApiClientAgent with default API hosts and credentials cache.
      */
-    public FitbitApiClientAgent() {
-        this(DEFAULT_API_BASE_URL, DEFAULT_WEB_BASE_URL, (FitbitApiCredentialsCache) null);
-    }
+//    public FitbitApiClientAgent() {
+//        this(DEFAULT_API_BASE_URL, DEFAULT_WEB_BASE_URL, (FitbitApiCredentialsCache) null, null);
+//    }
 
     /**
      * Creates FitbitApiClientAgent with custom API hosts and credentials cache.
@@ -72,10 +73,12 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
      *
      * @see <a href="http://wiki.fitbit.com/display/API/API-Client-Reference-App">Fitbit API: API-Client-Reference-App</a>
      */
-    public FitbitApiClientAgent(String apiBaseUrl, String webBaseUrl, FitbitApiCredentialsCache credentialsCache) {
-        this("https://" + apiBaseUrl + "/oauth/request_token", webBaseUrl + "/oauth/authorize", "https://" + apiBaseUrl + "/oauth/access_token");
+    public FitbitApiClientAgent(String apiBaseUrl, String webBaseUrl, FitbitApiCredentialsCache credentialsCache, SDKServiceProvider serviceProvider) {
+        this("https://" + apiBaseUrl + "/oauth/request_token", webBaseUrl + "/oauth/authorize", "https://" + apiBaseUrl + "/oauth/access_token", serviceProvider);
+        //logger = serviceProvider.getLoggerService(FitbitApiClientAgent.class);
+        //logger.debug("client agent constructor");
         this.apiBaseUrl = apiBaseUrl;
-        if (null == credentialsCache) {
+        if (credentialsCache == null) {
             this.credentialsCache = DEFAULT_CREDENTIALS_CACHE;
         } else {
             this.credentialsCache = credentialsCache;
@@ -89,8 +92,8 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
      *
      * @see <a href="http://wiki.fitbit.com/display/API/API-Client-Reference-App">Fitbit API: API-Client-Reference-App</a>
      */
-    public FitbitApiClientAgent(String requestTokenURL, String authorizationURL, String accessTokenURL) {
-        super();
+    private FitbitApiClientAgent(String requestTokenURL, String authorizationURL, String accessTokenURL, SDKServiceProvider serviceProvider) {
+        super(null, null, serviceProvider);
         init(requestTokenURL, authorizationURL, accessTokenURL);
     }
 
@@ -150,8 +153,8 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
      * @see <a href="http://wiki.fitbit.com/display/API/OAuth-Authentication-API">Fitbit API: OAuth-Authentication-API</a>
      * @see <a href="http://oauth.net/core/1.0/#auth_step1">OAuth Core 1.0 - 6.1.  Obtaining an Unauthorized Request Token</a>
      */
-    public TempCredentials getOAuthTempToken(String callback_url, SDKServiceProvider provider) throws FitbitAPIException {
-        return http.getOauthRequestToken(callback_url, provider);
+    public TempCredentials getOAuthTempToken(String callback_url) throws FitbitAPIException {
+        return http.getOauthRequestToken(callback_url);
     }
 
     /**
@@ -200,13 +203,10 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
      * @see <a href="http://wiki.fitbit.com/OAuth-Authenticaion-API">Fitbit API: OAuth-Authentication-API</a>
      * @see <a href="http://oauth.net/core/1.0/#auth_step2">OAuth Core 1.0 - 6.2.  Obtaining User Authorization</a>
      */
-    public synchronized AccessToken getOAuthAccessToken(String token, String tokenSecret, String oauth_verifier, SDKServiceProvider serviceProvider) throws FitbitAPIException {
-        return http.getOAuthAccessToken(token, tokenSecret, oauth_verifier, serviceProvider);
-    }
-
     public synchronized AccessToken getOAuthAccessToken(String token, String tokenSecret, String oauth_verifier) throws FitbitAPIException {
         return http.getOAuthAccessToken(token, tokenSecret, oauth_verifier);
     }
+
     /**
      * Sets the access token
      *
@@ -2072,9 +2072,10 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
         }
     }
 
-    /**
+    /** BG - added this method to return JSON
      * Get a user's profile
      *
+     * @param localUser authorized user
      * @param fitbitUser user to retrieve data from
      *
      * @return profile of a user
@@ -2082,35 +2083,20 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
      * @throws com.fitbit.api.FitbitAPIException Fitbit API Exception
      * @see <a href="http://wiki.fitbit.com/display/API/API-Get-User-Info">Fitbit API: API-Get-User-Info</a>
      */
-    public String getUserInfoJsonSM(FitbitUser fitbitUser, AccessToken accessToken, SDKServiceProvider serviceProvider) throws FitbitAPIException {
-        //setAccessToken(localUser);
+    public String getUserInfoJSON(LocalUserDetail localUser, FitbitUser fitbitUser) throws FitbitAPIException {
+        setAccessToken(localUser);
         // Example: GET /1/user/-/profile.json
-
-        LoggerService logger = serviceProvider.getLoggerService(HttpClient.class);
-        logger.debug("in get user info");
-
         String url = APIUtil.contextualizeUrl(getApiBaseUrl(), getApiVersion(), "/user/" + fitbitUser.getId() + "/profile", APIFormat.JSON);
-        HttpResponse response;
 
         try {
-            Boolean authenticated = true;
-            http.setOAuthAccessToken(accessToken);
-            response = http.httpRequest(HttpClient.HttpMethod.GET, url, PostParameter.EMPTY_ARRAY, authenticated, serviceProvider);
-        }
-        catch (FitbitAPIException e) {
+            Response response = httpGet(url, true);
+            throwExceptionIfError(response);
+            return response.asString();
+        } catch (FitbitAPIException e) {
             throw new FitbitAPIException("Error getting user info: " + e, e);
         }
-
-        if (response == null) {
-                throw new FitbitAPIException("null response in call to get user info");
-        }
-
-        String body = response.getBody();
-        if (body == null) {
-            throw new FitbitAPIException("null body returned in call to get user info");
-        }
-        return body;
     }
+
     /**
      * Update user's profile
      *
@@ -2328,6 +2314,11 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
         return getFriends(url);
     }
 
+    public String getFriendsJson(FitbitUser owner) throws FitbitAPIException {
+        // GET /1/user/XXXX/friends.json
+        String url = APIUtil.contextualizeUrl(getApiBaseUrl(), getApiVersion(), "/user/" + owner.getId() + "/friends", APIFormat.JSON);
+        return getFriendsJson(url);
+    }
     /**
      * Get a list of user's friends
      *
@@ -2367,6 +2358,23 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
             throw new FitbitAPIException("Error parsing json response to list of UserInfo : ", e);
         }
     }
+
+    /**
+     * Get a list of user's friends
+     *
+     * @param url full url for the requested resource in the API in json format
+     *
+     * @return list of user's friends
+     *
+     * @throws com.fitbit.api.FitbitAPIException Fitbit API Exception
+     * @see <a href="http://wiki.fitbit.com/display/API/API-Get-Friends">Fitbit API: API-Get-Friends</a>
+     */
+    private String getFriendsJson(String url) throws FitbitAPIException {
+        Response response = httpGet(url, true);
+        throwExceptionIfError(response);
+        return response.asString();
+    }
+
 
     /**
      * Get a leaderboard of user's friends progress
@@ -2845,7 +2853,7 @@ public class FitbitApiClientAgent extends FitbitAPIClientSupport implements Seri
 
     protected static String appendParamsToUrl(String url, PostParameter[] params) {
         if (null != params && params.length > 0) {
-            return url + '?' + HttpClient.encodeParameters(params);
+            return url + '?' + HttpClientStackMob.encodeParameters(params);
         }
         return url;
     }
