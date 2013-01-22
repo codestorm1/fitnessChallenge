@@ -56,12 +56,12 @@ public class AgentInitializer {
             }
 
 
-            SMValue smAccess = userObject.getValue().get("access_token");
-            credentials.put("access_token", ((SMString)smAccess).getValue());
-            SMValue smSecret = userObject.getValue().get("access_token_secret");
-            credentials.put("access_token_secret", ((SMString)smSecret).getValue());
-            SMValue smFitbitUserID = userObject.getValue().get("fitbit_user_id");
-            credentials.put("fitbit_user_id", ((SMString)smFitbitUserID).getValue());
+            SMValue smAccess = userObject.getValue().get("accesstoken");
+            credentials.put("accesstoken", ((SMString)smAccess).getValue());
+            SMValue smSecret = userObject.getValue().get("accesstokensecret");
+            credentials.put("accesstokensecret", ((SMString)smSecret).getValue());
+            SMValue smFitbitUserID = userObject.getValue().get("fitbituserid");
+            credentials.put("fitbituserid", ((SMString)smFitbitUserID).getValue());
 
         } catch (InvalidSchemaException e) {
             credentials.put("error", "invalid_schema");
@@ -108,9 +108,9 @@ public class AgentInitializer {
                     logger.warn(credentials.get("details"));
                     return null;
                 }
-                fitbitUserID = credentials.get("fitbit_user_id");
-                accessToken = credentials.get("access_token");
-                tokenSecret = credentials.get("access_token_secret");
+                fitbitUserID = credentials.get("fitbituserid");
+                accessToken = credentials.get("accesstoken");
+                tokenSecret = credentials.get("accesstokensecret");
                 logger.debug(String.format("returned creds: fitbit ID %s access token: %s secret: %s", fitbitUserID, accessToken, tokenSecret));
 
                 cred = new APIResourceCredentials(stackmobUserID, "", "");

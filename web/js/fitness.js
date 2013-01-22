@@ -204,7 +204,7 @@ var fitness = fitness || {
         });
     },
 
-    CreateStackmobUser : function(email, password, callback) {
+    createStackmobUser : function(email, password, callback) {
         var that = this;
         //var User = StackMob.Model.extend({ schemaName: 'user' });
         //var user = new User(fitbitUser);
@@ -330,7 +330,9 @@ var fitness = fitness || {
 
                     var user = new StackMob.User({ username : that.user.username });
                     var params = {
-                        "friends" : stackmobFriendIDs
+                        "friends" : stackmobFriendIDs,
+                        "friendcount" : stackmobFriendIDs.length,
+                        "fitbitfriendcount" : fitbitUserIDs.length
                     };
                     user.save(params, {
                         success: function(model) {
@@ -351,6 +353,37 @@ var fitness = fitness || {
             },
             error: function(repsonse) {
 
+            }
+        });
+    },
+
+    formatDate : function(date) {
+        var day = date.getDate();
+        var month = date.getMonth() + 1; //Months are zero based
+        var year = date.getFullYear();
+        var dateStr = month + "/" + day  + "/" + year;
+        return dateStr;
+    },
+
+    updateActivities : function(callback) {
+        var today = new Date();
+        var lastWeek = new Date(today.getTime() - 7*24*60*60*1000);
+
+        var params = {
+            "stackmob_user_id" : this.user.username,
+            "start_date" : this.formatDate(lastWeek),
+            "end_date" : this.formatDate(today)
+        };
+        StackMob.customcode('fetch_fitbit_activities', params, {
+            success: function(tokens) {
+                if (typeof callback === "function") {
+                    callback(true, tokens)
+                }
+            },
+            error: function(data) {
+                if (typeof callback === "function") {
+                    callback(false, data)
+                }
             }
         });
     },
@@ -418,7 +451,7 @@ var fitness = fitness || {
                 that.showMessage("Passwords do not match");
                 return;
             }
-            that.CreateStackmobUser(email, newPassword, function(success, data) {
+            that.createStackmobUser(email, newPassword, function(success, data) {
                 if (success) {
                     window.location.href = '/#auth';
                 }
@@ -553,12 +586,14 @@ var fitness = fitness || {
                     }
                 });
 
+                that.updateActivities();
+
                 var template = $('#home_template');
                 var dto = {
                     "username" : fitness.user.username,
                     "displayName" : fitness.user.displayname,
-                    "friendCount" : 99,//fitness.user.friends.length,
-                    "fitbitFriendCount" : ""
+                    "friendCount" : fitness.user.friendcount,
+                    "fitbitFriendCount" : fitness.user.fitbitfriendcount
                 };
                 var html = Mustache.to_html(template.html(), dto);
                 this.$el.empty();

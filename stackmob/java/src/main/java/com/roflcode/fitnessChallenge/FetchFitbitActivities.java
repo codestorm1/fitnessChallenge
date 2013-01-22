@@ -28,8 +28,11 @@ import com.stackmob.core.rest.ProcessedAPIRequest;
 import com.stackmob.core.rest.ResponseToProcess;
 import com.stackmob.sdkapi.*;
 import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.net.HttpURLConnection;
 import java.util.*;
@@ -47,7 +50,7 @@ public class FetchFitbitActivities implements CustomCodeMethod {
 
   @Override
   public List<String> getParams() {
-    return Arrays.asList("stackmob_user_id");
+    return Arrays.asList("stackmob_user_id", "start_date", "end_date");
   }
 
 
@@ -57,6 +60,11 @@ public class FetchFitbitActivities implements CustomCodeMethod {
       logger.debug("get fitbit activities ------------------------------");
 
       String stackmobUserID = request.getParams().get("stackmob_user_id");
+      String startDateStr = request.getParams().get("start_date");
+      String endDateStr = request.getParams().get("end_date");
+      if (endDateStr == "") {
+          endDateStr = startDateStr;
+      }
 
       if (stackmobUserID == null || stackmobUserID.isEmpty()) {
           HashMap<String, String> errParams = new HashMap<String, String>();
@@ -73,141 +81,128 @@ public class FetchFitbitActivities implements CustomCodeMethod {
 
 
       HashMap<String, String> credentials = AgentInitializer.GetStoredFitbitCredentials(serviceProvider, stackmobUserID);
-      String fitbitUserID = credentials.get("fitbit_user_id");
+      String fitbitUserID = credentials.get("fitbituserid");
       LocalUserDetail user = new LocalUserDetail(stackmobUserID);
       FitbitUser fitbitUser = new FitbitUser(fitbitUserID);
       //LocalDate today = new LocalDate(DateTimeZone.UTC);
 
-      TimeZone tz = TimeZone.getTimeZone("GMT-8:00");
-      LocalDate today = new LocalDate(DateTimeZone.forTimeZone(tz));
+
+      DateTimeFormatter formatter = DateTimeFormat.forPattern("MM/dd/yyyy");
+      DateTime dt = formatter.parseDateTime(startDateStr);
+      LocalDate startDate = new LocalDate(dt);
+      dt = formatter.parseDateTime(endDateStr);
+      LocalDate endDate = new LocalDate(dt);
+
+      //TimeZone tz = TimeZone.getTimeZone("GMT-8:00");
+      //LocalDate today = new LocalDate(DateTimeZone.forTimeZone(tz));
+      //LocalDate today = new LocalDate(DateTimeZone.forTimeZone(tz));
       //LocalDate yesterday = today.minusDays(1);
-      Activities activities;
 
-      try {
-        activities = agent.getActivities(user, fitbitUser, today);
-      }
-      catch (FitbitAPIException ex) {
-          logger.error("failed to get activities", ex);
-          HashMap<String, String> errParams = new HashMap<String, String>();
-          errParams.put("error", "could not get activities");
-          return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errParams); // http 500 internal error
-      }
+      logger.debug("entering date loop " + startDate.toString() + " end: " + endDate.toString());
+      for (LocalDate date = startDate; date.isBefore(endDate) || date.isEqual(endDate); date = date.plusDays(1))
+      {
+          logger.debug("date: " + date.toString());
 
-      ActivitiesSummary summary = activities.getSummary();
-//          private Integer floors = null;
-//          private Double elevation = null;
-//          private List<ActivityDistance> distances;
+          Activities activities;
 
-      DataService dataService = serviceProvider.getDataService();
-
-      DateMidnight dateMidnight = today.toDateMidnight();
-      long millis = dateMidnight.getMillis();
-
-      List<SMCondition> query;
-      List<SMObject> result;
-
-//      query = new ArrayList<SMCondition>();
-//      query.add(new SMEquals("username", new SMString(stackmobUserID)));
-//
-//      // execute the query
-//      SMObject userObject = null;
-//      try {
-//          boolean newActivity = false;
-//          SMValue activityId;
-//          result = dataService.readObjects("user", query);
-//
-//
-//          //activity was in the datastore, so update
-//          if (result != null && result.size() == 1) {
-//              userObject = result.get(0);
-//          }
-//      }
-//      catch (InvalidSchemaException e) {
-//        HashMap<String, String> errMap = new HashMap<String, String>();
-//        errMap.put("error", "invalid_schema");
-//        errMap.put("detail", e.toString());
-//        return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
-//      }
-//      catch (DatastoreException ex) {
-//          logger.error("error fetching user", ex);
-//          HashMap<String, String> errMap = new HashMap<String, String>();
-//          errMap.put("error", "datastore_exception");
-//          errMap.put("detail", ex.toString());
-//          return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
-//      }
-
-              // build a query
-      query = new ArrayList<SMCondition>();
-      query.add(new SMEquals("theusername", new SMString(stackmobUserID)));
-      query.add(new SMEquals("activity_date", new SMInt(millis)));
-
-      // execute the query
-      try {
-          boolean newActivity = false;
-          SMValue activityId;
-          result = dataService.readObjects("activity", query);
-
-          SMObject activityObject;
-
-          //activity was in the datastore, so update
-          if (result != null && result.size() == 1) {
-              activityObject = result.get(0);
-              List<SMUpdate> update = new ArrayList<SMUpdate>();
-              update.add(new SMSet("active_score", new SMInt((long)summary.getActiveScore())));
-              update.add(new SMSet("steps", new SMInt((long)summary.getSteps())));
-              update.add(new SMSet("floors", new SMInt((long)summary.getFloors())));
-              update.add(new SMSet("sedentary_minutes", new SMInt((long)summary.getSedentaryMinutes())));
-              update.add(new SMSet("lightly_active_minutes", new SMInt((long)summary.getLightlyActiveMinutes())));
-              update.add(new SMSet("fairly_active_minutes", new SMInt((long)summary.getFairlyActiveMinutes())));
-              update.add(new SMSet("very_active_minutes", new SMInt((long)summary.getVeryActiveMinutes())));
-              activityId = activityObject.getValue().get("activity_id");
-              logger.debug("update object");
-              dataService.updateObject("activity", activityId, update);
-              logger.debug("updated object");
+          try {
+            activities = agent.getActivities(user, fitbitUser, date);
           }
-          else {
-              Map<String, SMValue> activityMap = new HashMap<String, SMValue>();
-              activityMap.put("theusername", new SMString(stackmobUserID));
-              activityMap.put("activity_date", new SMInt(millis));
-              activityMap.put("active_score", new SMInt((long) summary.getActiveScore()));
-              activityMap.put("steps", new SMInt((long) summary.getSteps()));
-              activityMap.put("floors", new SMInt((long) summary.getFloors()));
-              activityMap.put("sedentary_minutes", new SMInt((long) summary.getSedentaryMinutes()));
-              activityMap.put("lightly_active_minutes", new SMInt((long) summary.getLightlyActiveMinutes()));
-              activityMap.put("fairly_active_minutes", new SMInt((long) summary.getFairlyActiveMinutes()));
-              activityMap.put("very_active_minutes", new SMInt((long) summary.getVeryActiveMinutes()));
-
-              activityObject = new SMObject(activityMap);
-              logger.debug("create object");
-              activityObject = dataService.createObject("activity", activityObject);
-              logger.debug("created object");
-              activityId = activityObject.getValue().get("activity_id");
-              newActivity = true;
+          catch (FitbitAPIException ex) {
+              logger.error("failed to get activities", ex);
+              HashMap<String, String> errParams = new HashMap<String, String>();
+              errParams.put("error", "could not get activities");
+              return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errParams); // http 500 internal error
           }
 
-          Map<String, Object> returnMap = new HashMap<String, Object>();
-          returnMap.put("activity_id", activityId);
-          returnMap.put("newActivity", newActivity);
-          //returnMap.put("activitiesJson", activities);
-          logger.debug("completed get activities");
-          return new ResponseToProcess(HttpURLConnection.HTTP_OK, returnMap);
-      } catch (InvalidSchemaException e) {
-          HashMap<String, String> errMap = new HashMap<String, String>();
-          errMap.put("error", "invalid_schema");
-          errMap.put("detail", e.toString());
-          return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
+          ActivitiesSummary summary = activities.getSummary();
+    //          private Integer floors = null;
+    //          private Double elevation = null;
+    //          private List<ActivityDistance> distances;
+
+          DataService dataService = serviceProvider.getDataService();
+
+          DateMidnight dateMidnight = date.toDateMidnight();
+          long millis = dateMidnight.getMillis();
+
+          List<SMCondition> query;
+          List<SMObject> result;
+
+          // build a query
+          query = new ArrayList<SMCondition>();
+          query.add(new SMEquals("theusername", new SMString(stackmobUserID)));
+          query.add(new SMEquals("activity_date", new SMInt(millis)));
+
+          // execute the query
+          try {
+              boolean newActivity = false;
+              SMValue activityId;
+              result = dataService.readObjects("activity", query);
+
+              SMObject activityObject;
+
+              //activity was in the datastore, so update
+              if (result != null && result.size() == 1) {
+                  activityObject = result.get(0);
+                  List<SMUpdate> update = new ArrayList<SMUpdate>();
+                  update.add(new SMSet("active_score", new SMInt((long)summary.getActiveScore())));
+                  update.add(new SMSet("steps", new SMInt((long)summary.getSteps())));
+                  update.add(new SMSet("floors", new SMInt((long)summary.getFloors())));
+                  update.add(new SMSet("sedentary_minutes", new SMInt((long)summary.getSedentaryMinutes())));
+                  update.add(new SMSet("lightly_active_minutes", new SMInt((long)summary.getLightlyActiveMinutes())));
+                  update.add(new SMSet("fairly_active_minutes", new SMInt((long)summary.getFairlyActiveMinutes())));
+                  update.add(new SMSet("very_active_minutes", new SMInt((long)summary.getVeryActiveMinutes())));
+                  activityId = activityObject.getValue().get("activity_id");
+                  logger.debug("update object");
+                  dataService.updateObject("activity", activityId, update);
+                  logger.debug("updated object");
+              }
+              else {
+                  Map<String, SMValue> activityMap = new HashMap<String, SMValue>();
+                  activityMap.put("theusername", new SMString(stackmobUserID));
+                  activityMap.put("activity_date", new SMInt(millis));
+                  activityMap.put("activity_date_str", new SMString(date.toString()));
+                  activityMap.put("active_score", new SMInt((long) summary.getActiveScore()));
+                  activityMap.put("steps", new SMInt((long) summary.getSteps()));
+                  activityMap.put("floors", new SMInt((long) summary.getFloors()));
+                  activityMap.put("sedentary_minutes", new SMInt((long) summary.getSedentaryMinutes()));
+                  activityMap.put("lightly_active_minutes", new SMInt((long) summary.getLightlyActiveMinutes()));
+                  activityMap.put("fairly_active_minutes", new SMInt((long) summary.getFairlyActiveMinutes()));
+                  activityMap.put("very_active_minutes", new SMInt((long) summary.getVeryActiveMinutes()));
+
+                  activityObject = new SMObject(activityMap);
+                  logger.debug("create object");
+                  activityObject = dataService.createObject("activity", activityObject);
+                  logger.debug("created object");
+                  activityId = activityObject.getValue().get("activity_id");
+                  newActivity = true;
+              }
+
+          } catch (InvalidSchemaException e) {
+              HashMap<String, String> errMap = new HashMap<String, String>();
+              errMap.put("error", "invalid_schema");
+              errMap.put("detail", e.toString());
+              return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
+          }
+          catch (DatastoreException e) {
+              HashMap<String, String> errMap = new HashMap<String, String>();
+              errMap.put("error", "datastore_exception");
+              errMap.put("detail", e.toString());
+              return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
+          }
+          catch(Exception e) {
+              HashMap<String, String> errMap = new HashMap<String, String>();
+              errMap.put("error", "unknown");
+              errMap.put("detail", e.toString());
+              return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
+          }
       }
-      catch (DatastoreException e) {
-          HashMap<String, String> errMap = new HashMap<String, String>();
-          errMap.put("error", "datastore_exception");
-          errMap.put("detail", e.toString());
-          return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
-      }
-      catch(Exception e) {
-          HashMap<String, String> errMap = new HashMap<String, String>();
-          errMap.put("error", "unknown");
-          errMap.put("detail", e.toString());
-          return new ResponseToProcess(HttpURLConnection.HTTP_INTERNAL_ERROR, errMap); // http 500 - internal server error
-      }
-    }
+      Map<String, Object> returnMap = new HashMap<String, Object>();
+      returnMap.put("success?", "think so");
+//      returnMap.put("activity_id", activityId);
+//      returnMap.put("newActivity", newActivity);
+      //returnMap.put("activitiesJson", activities);
+      logger.debug("completed get activities");
+      return new ResponseToProcess(HttpURLConnection.HTTP_OK, returnMap);
+  }
 }
