@@ -63,20 +63,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="fitness.js" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="fitness.js" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/web/js/fitness.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="14" column="20" selection-start="433" selection-end="433" vertical-scroll-proportion="0.0">
+            <state line="612" column="0" selection-start="21532" selection-end="21532" vertical-scroll-proportion="0.02918288">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FetchFitbitFriends.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="FetchFitbitFriends.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/FetchFitbitFriends.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="181" column="0" selection-start="7972" selection-end="7972" vertical-scroll-proportion="0.80582523">
-              <folding />
+            <state line="57" column="25" selection-start="2165" selection-end="2172" vertical-scroll-proportion="-6.576923">
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -84,7 +87,7 @@
       <file leaf-file-name="index.html" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/web/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="48" column="65" selection-start="2688" selection-end="2688" vertical-scroll-proportion="-1.5822785">
+            <state line="49" column="52" selection-start="2797" selection-end="2797" vertical-scroll-proportion="-17.083334">
               <folding />
             </state>
           </provider>
@@ -149,7 +152,6 @@
         <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/FetchFitbitRequestToken.java" />
         <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/FetchFitbitUser.java" />
         <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/fitbit/api/client/FitbitApiClientAgent.java" />
-        <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/FetchFitbitFriends.java" />
         <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/FetchActivities.java" />
         <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/EntryPointExtender.java" />
         <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/AgentInitializer.java" />
@@ -158,17 +160,18 @@
         <option value="$PROJECT_DIR$/web/css/main.css" />
         <option value="$PROJECT_DIR$/web/css/normalize.css" />
         <option value="$PROJECT_DIR$/web/sample.html" />
-        <option value="$PROJECT_DIR$/web/index.html" />
         <option value="$PROJECT_DIR$/web/css/fitness.css" />
+        <option value="$PROJECT_DIR$/web/index.html" />
+        <option value="$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/FetchFitbitFriends.java" />
         <option value="$PROJECT_DIR$/web/js/fitness.js" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="251" />
-    <option name="y" value="121" />
-    <option name="width" value="1669" />
-    <option name="height" value="905" />
+    <option name="x" value="151" />
+    <option name="y" value="94" />
+    <option name="width" value="1674" />
+    <option name="height" value="827" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -519,14 +522,14 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="251" y="121" width="1669" height="905" extended-state="0" />
+    <frame x="151" y="94" width="1674" height="827" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.17729592" sideWeight="0.9987886" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19688386" sideWeight="0.9987886" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -539,7 +542,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3995128" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20727946" sideWeight="0.8227041" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.20664206" sideWeight="0.80311614" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -606,11 +609,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/stackmob/java/src/main/java/com/fitbit/api/common/model/activities/Activities.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="20" selection-start="322" selection-end="322" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
     <entry file="jar://$PROJECT_DIR$/stackmob/lib/joda-time-2.1.jar!/org/joda/time/DateMidnight.class">
       <provider selected="true" editor-type-id="text-editor">
         <state line="19" column="11" selection-start="963" selection-end="963" vertical-scroll-proportion="-0.035377357">
@@ -697,13 +695,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/web/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="48" column="65" selection-start="2688" selection-end="2688" vertical-scroll-proportion="-1.5822785">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/web/css/fitness.css">
       <provider selected="true" editor-type-id="text-editor">
         <state line="34" column="21" selection-start="563" selection-end="563" vertical-scroll-proportion="0.0">
@@ -711,16 +702,33 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/web/js/fitness.js">
+    <entry file="file://$PROJECT_DIR$/stackmob/java/src/main/java/com/fitbit/api/client/FitbitApiClientAgent.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="20" selection-start="433" selection-end="433" vertical-scroll-proportion="0.0">
+        <state line="2316" column="18" selection-start="102279" selection-end="102279" vertical-scroll-proportion="0.33206832">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/web/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="49" column="52" selection-start="2797" selection-end="2797" vertical-scroll-proportion="-17.083334">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/stackmob/java/src/main/java/com/roflcode/fitnessChallenge/FetchFitbitFriends.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="181" column="0" selection-start="7972" selection-end="7972" vertical-scroll-proportion="0.80582523">
+        <state line="57" column="25" selection-start="2165" selection-end="2172" vertical-scroll-proportion="-6.576923">
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/web/js/fitness.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="612" column="0" selection-start="21532" selection-end="21532" vertical-scroll-proportion="0.02918288">
           <folding />
         </state>
       </provider>

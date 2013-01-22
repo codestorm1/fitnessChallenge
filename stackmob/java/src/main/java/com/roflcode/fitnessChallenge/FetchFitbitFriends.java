@@ -108,11 +108,11 @@ public class FetchFitbitFriends implements CustomCodeMethod {
           }
 
 
-          SMValue smAccess = userObject.getValue().get("access_token");
+          SMValue smAccess = userObject.getValue().get("accesstoken");
           accessToken = ((SMString)smAccess).getValue();
-          SMValue smSecret = userObject.getValue().get("access_token_secret");
+          SMValue smSecret = userObject.getValue().get("accesstokensecret");
           tokenSecret = ((SMString)smSecret).getValue();
-          SMValue smFitbitUserID = userObject.getValue().get("fitbit_user_id");
+          SMValue smFitbitUserID = userObject.getValue().get("fitbituserid");
           fitbitUserID = ((SMString)smFitbitUserID).getValue();
 
       } catch (InvalidSchemaException e) {

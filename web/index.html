@@ -38,15 +38,16 @@
         <header data-theme="j" data-role="header"  data-nobackbtn="true">
             <h1 class="ir logo"><span>Fitness Challenge</span></h1>
         </header>
-        <div id="main">
-        </div>
+        <div id="main"></div>
+        <div id="results"></div>
 
         <script id="home_template" type="text/template">
             <div id="home">
                 <!--<h1>Fitness Challenge</h1>-->
                 <h3>Challenge your friends to see who can take the most fitbit steps.</h3>
                 <h3>Welcome back, {{ displayName }}!</h3>
-                <h4>Your fitness challenge ID is {{ stackmobID }}<br/>
+                <h3>{{ friendCount }} of your {{ fitbitFriendCount }} friends using this app</h3>
+                <h4>Your fitness challenge ID is {{ username }}<br/>
                     Soon you will be able to create a new challenge!<br/>
                 </h4>
             </div>

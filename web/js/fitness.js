@@ -119,23 +119,21 @@ var fitness = fitness || {
 
         StackMob.customcode('fetch_fitbit_access_token', params, 'GET', {
             success: function(accessTokenData) {
-                localStorage.setItem('access_token', accessTokenData.oauth_token);
-                localStorage.setItem('access_token_secret', accessTokenData.oauth_token_secret);
-                localStorage.setItem('fitbit_user_id', accessTokenData.fitbit_user_id);
+
+//                localStorage.setItem('access_token', accessTokenData.oauth_token);
+//                localStorage.setItem('accesstokensecret', accessTokenData.oauth_token_secret);
+//                localStorage.setItem('fitbit_user_id', accessTokenData.fitbit_user_id);
+                that.user.accesstoken =  accessTokenData.oauth_token;
+                that.user.accesstokensecret = accessTokenData.oauth_token_secret;
+                that.user.fitbituserid = accessTokenData.fitbit_user_id;
                 localStorage.removeItem('request_token');
                 localStorage.removeItem('request_token_secret');
-                that.updateAppUserFromLocal();
                 if (typeof callback === "function") {
                     callback(true, params, accessTokenData);
                 }
             },
 
             error: function(jsonResult) {
-                results = 'call failed, no tokens, click the link to authorize<br/>\n';
-                for (var key in jsonResult) {
-                    results += key + ": " + jsonResult[key] + '<br>\n'
-                }
-                $('#results').html(results);
                 if (typeof callback === "function") {
                     callback(false, params, jsonResult);
                 }
@@ -145,11 +143,10 @@ var fitness = fitness || {
 
     getFitbitUser : function(callback) {
 
-        var results;
         var params = {
-            "access_token" : this.user.accessToken,
-            "access_token_secret" : this.user.accessTokenSecret,
-            "fitbit_user_id" : this.user.fitbitUserID
+            "access_token" : this.user.accesstoken,
+            "access_token_secret" : this.user.accesstokensecret,
+            "fitbit_user_id" : this.user.fitbituserid
         };
         StackMob.customcode('fetch_fitbit_user', params, 'GET', {
             success: function(jsonResult) {
@@ -166,61 +163,6 @@ var fitness = fitness || {
                 }
             }
         });
-    },
-
-    updateAppUserFromLocal : function() {
-        this.user = this.user || {};
-        this.user.stackmobUserID = localStorage.getItem('stackmob_user_id');
-        this.user.fitbitUserID = localStorage.getItem("fitbit_user_id");
-        this.user.accessToken = localStorage.getItem("access_token");
-        this.user.accessTokenSecret = localStorage.getItem("access_token_secret");
-        this.user.displayName = localStorage.getItem("display_name");
-        return this.user;
-    },
-
-    saveUserToLocal : function(user) {
-        localStorage.setItem('stackmob_user_id', user.stackmobUserID);
-        localStorage.setItem('fitbit_user_id', user.fitbitUserID);
-        localStorage.setItem('access_token', user.accessToken);
-        localStorage.setItem('access_token_secret', user.accessTokenSecret);
-        localStorage.setItem('display_name', user.displayName);
-    },
-
-    getFitbitFriends : function(stackmobUserID, callback) {
-
-        var results;
-        StackMob.customcode('fetch_fitbit_friends', {"stackmob_user_id" : stackmobUserID}, 'GET', {
-            success: function(jsonResult) {
-                results = 'got friends!<br/>\n';
-                var friendsResponse = jsonResult['friendsJson'];
-                var friends = JSON.parse(userInfoResponse)['friends'];
-
-                var len = friends.length;
-                var friend;
-                for (var i = 0; i < len; i++) {
-                    friend = friends[i];
-                    for (var key in friend) {
-                        results += key + ": " + friend[key] + '<br>\n';
-                    }
-                }
-                $('#results').html(results);
-                if (typeof callback === "function") {
-                    callback(true, friends);
-                }
-            },
-
-            error: function(jsonResult) {
-                results = 'call failed, no friends returned<br/>\n';
-                for (var key in jsonResult) {
-                    results += key + ": " + jsonResult[key] + '<br>\n'
-                }
-                $('#results').html(results);
-                if (typeof callback === "function") {
-                    callback(false, jsonResult);
-                }
-            }
-        });
-
     },
 
     lookupFitnessUser : function(email, password, callback) {
@@ -262,7 +204,7 @@ var fitness = fitness || {
         });
     },
 
-    saveUserToStackmob : function(email, password, callback) {
+    CreateStackmobUser : function(email, password, callback) {
         var that = this;
         //var User = StackMob.Model.extend({ schemaName: 'user' });
         //var user = new User(fitbitUser);
@@ -285,8 +227,8 @@ var fitness = fitness || {
                     user.create({
                         success: function(model) {
                             console.debug('user object is saved');
-                            fitness.user.stackmobUserID = currentUserID;
-                            localStorage.setItem('stackmob_user_id', currentUserID);
+                            fitness.user = model.attributes;
+                            localStorage.setItem('username', currentUserID);
                             callback(true, model);
                         },
                         error: function(model, response) {
@@ -304,14 +246,11 @@ var fitness = fitness || {
 
     updateWithFitbitUser : function(fitbitUser, callback) {
 
-        delete fitbitUser.encodedId;
-        var fields = fitbitUser;
-        fields.access_token = this.user.accessToken;
-        fields.access_token_secret = this.user.accessTokenSecret;
-        fields.fitbit_user_id = this.user.fitbitUserID;
+        delete fitbitUser.encodedid;
+        $.extend(this.user, fitbitUser);
 
-        var user = new StackMob.User({ username : this.user.stackmobUserID });
-        user.save(fields, {
+        var user = new StackMob.User({ username : this.user.username });
+        user.save(this.user, {
             success: function(model) {
                 console.debug(model.toJSON());
                 if (typeof callback === "function") {
@@ -327,41 +266,149 @@ var fitness = fitness || {
         });
     },
 
-    saveFriendsToStackmob : function(success, fitbitUser) {
-        if (!success) {
-            $('#results').html('can\'t save friends - failed to fetch friends');
-            return;
-        }
+    getFitbitFriends : function(username, callback) {
+        var that = this;
+        var results;
+        StackMob.customcode('fetch_fitbit_friends', {"stackmob_user_id" : username}, 'GET', {
+            success: function(jsonResult) {
+                results = 'got friends!<br/>\n';
+                var friendsResponse = jsonResult['friendsJson'];
+                var friends = JSON.parse(friendsResponse)['friends'];
 
-        fitbitUser.username = fitness.user.stackmobUserID.toString();
-        fitbitUser.access_token = localStorage.getItem("access_token");
-        fitbitUser.access_token_secret = localStorage.getItem("access_token_secret");
-        fitbitUser.fitbit_user_id = localStorage.getItem("fitbit_user_id");
-
-        var user = new StackMob.User(fitbitUser);
-        user.create({
-            success: function(model) {
-                console.debug('user object is saved');
-                $('#results').html('user saved to datastore!');
-
+                if (typeof callback === "function") {
+                    callback(true, friends);
+                }
             },
-            error: function(model, response) {
-                console.debug(response);
-                $('#results').html('failed to save user to datastore');
+
+            error: function(response) {
+                that.showMessage('failed to get your Fitbit friends');
+                if (typeof callback === "function") {
+                    callback(false, response);
+                }
             }
         });
     },
 
-    bindEvents : function() {
-        var that = this;
-        $('#get_friends_link').on('click', function() {
-            if (that.user.stackmobUserID) {
-                that.getFitbitFriends(that.saveFriendToStackmob);
+    // not used now, for debugging
+    showFriends : function(friends) {
+        var friendsHTML = '';
+        var len = friends.length;
+        var friend;
+        for (var i = 0; i < len; i++) {
+            friend = friends[i]['user'];
+            for (var key in friend) {
+                friendsHTML += key + ": " + friend[key] + '<br>\n';
             }
-            else {
-                $('#results').html('Create a StackMob user ID first');
+        }
+        $('#results').html(friendsHTML);
+    },
+
+    saveFriendsToStackmob : function(friends) {
+        var that = fitness;
+        var fitbitUserIDs = [];
+        var len = friends.length;
+        for (var i = 0; i < len; i++) {
+            var friend = friends[i]['user'];
+            fitbitUserIDs.push(friend['encodedId']);
+        }
+
+        var User = StackMob.Model.extend({ schemaName: 'user' });
+        var Users = StackMob.Collection.extend({ model: User });
+        var users = new Users();
+
+        var friendsQuery = new StackMob.Collection.Query();
+        friendsQuery.mustBeOneOf('fitbituserid', fitbitUserIDs);
+        users.query(friendsQuery, {
+            success: function(friends) {
+                if (friends.models.length > 0 && friends.models[0].attributes) {
+                    var stackmobFriendIDs = [];
+                    len = friends.models.length;
+                    for (var i = 0; i < len; i++) {
+                        var friend = friends.models[i].attributes;
+                        stackmobFriendIDs.push(friend['username']);
+                    }
+
+                    var user = new StackMob.User({ username : that.user.username });
+                    var params = {
+                        "friends" : stackmobFriendIDs
+                    };
+                    user.save(params, {
+                        success: function(model) {
+                            console.debug(model.toJSON());
+                            if (typeof callback === "function") {
+                                callback(true, model);
+                            }
+                        },
+                        error: function(model, response) {
+                            console.debug(response);
+                            if (typeof callback === "function") {
+                                callback(false, response);
+                            }
+                        }
+                    });
+
+                }
+            },
+            error: function(repsonse) {
+
             }
         });
+    },
+
+    completeFitbitAuth : function() {
+        var that = this;
+        this.getFitbitAccessToken(function(success) {
+            if (success) {
+                if (that.user) {
+                    that.getFitbitUser(function(success, data) {
+                        if (success) {
+                            that.user.fitbituserid = data.encodedId;
+                            that.updateWithFitbitUser(data, function(success, data) {
+                                if (success) {
+                                    window.location.href = '/#home';
+                                }
+                                else {
+
+                                    that.showMessage('failed to update with fitbit info\n ' + data.error);
+                                }
+                            });
+                        }
+                        else {
+                            that.showMessage("failed to get Fitbit User: " + data);
+                        }
+                    });
+                }
+            }
+            else {
+                that.showMessage("failed to get Fitbit access token");
+            }
+        });
+    },
+
+    loginWithID : function(username, callback) {
+        var that = this;
+        if (username) {
+            var user = new StackMob.User({ username: username });
+            user.fetch({
+                success: function(model) {
+                    that.user = model.attributes;
+                    if (typeof callback === "function") {
+                        callback(true, model);
+                    }
+                },
+                error: function(data) {
+                    that.showMessage('Could not retrieve your user data');
+                    if (typeof callback === "function") {
+                        callback(false, data);
+                    }
+                }
+            });
+        }
+    },
+
+
+    bindEvents : function() {
+        var that = this;
 
         $('#register_submit').live('click', function() {
             var email = $("#register_email").val();
@@ -371,7 +418,7 @@ var fitness = fitness || {
                 that.showMessage("Passwords do not match");
                 return;
             }
-            that.saveUserToStackmob(email, newPassword, function(success, data) {
+            that.CreateStackmobUser(email, newPassword, function(success, data) {
                 if (success) {
                     window.location.href = '/#auth';
                 }
@@ -386,12 +433,7 @@ var fitness = fitness || {
             var password = $('#password').val();
             that.lookupFitnessUser(email, password, function(success, data) {
                 if (success) { // logged in
-                    that.user.stackmobUserID = data.username;
-                    that.user.accessToken = data.access_token;
-                    that.user.accessTokenSecret = data.access_token_secret;
-                    that.user.fitbitUserID = data.fitbit_user_id;
-                    that.user.displayName = data.displayname;
-                    that.saveUserToLocal(that.user);
+                    this.user = data;
                     window.location.href = '/#home';
                 }
                 else {
@@ -416,13 +458,7 @@ var fitness = fitness || {
     init : function() {
 
         var that = this;
-        this.updateAppUserFromLocal();
-        StackMob.init({
-            appName: "fitnesschallenge",
-            clientSubdomain: "twistedogregmailcom",
-            publicKey: "ba025b72-92db-4681-9abb-231baca5a94d",
-            apiVersion: 0
-            });
+
         this.bindEvents();
 
         this.AppRouter = Backbone.Router.extend({
@@ -446,7 +482,7 @@ var fitness = fitness || {
             },
 
             home : function () {
-                if (!that.user.stackmobUserID) {
+                if (!that.user) {
                     this.changePage(new that.LoginView());
                     return;
                 }
@@ -501,50 +537,33 @@ var fitness = fitness || {
 
             render: function() {
                 if (window.location.href.indexOf('oauth_token') !== -1) {
-                    that.getFitbitAccessToken(function(success) {
-                        if (success) {
-                            if (fitness.user.stackmobUserID) {
-                                that.getFitbitUser(function(success, data) {
-                                    if (success) {
-                                        that.user.displayName = data.displayName;
-                                        localStorage.setItem("display_name", data.displayName);
-                                        that.user.fitbitUserID = data.encodedId;
-                                        that.updateWithFitbitUser(data, function(success, data) {
-                                            if (success) {
-                                                window.location.href = '/#home';
-                                            }
-                                            else {
-
-                                                that.showMessage('failed to update with fitbit info\n ' + data.error);
-                                            }
-                                        });
-                                    }
-                                    else {
-                                        that.showMessage("failed to get Fitbit User: " + data);
-                                        return;
-                                    }
-                                });
-                            }
-                        }
-                        else {
-                            that.showMessage("failed to get Fitbit access token");
-                            return;
-                        }
-                    });
+                    that.completeFitbitAuth();
                     return;
                 }
+                if (!fitness.user.fitbituserid) {
+                    window.location.href = '/#auth';
+                }
+
+                that.getFitbitFriends(that.user.username, function(success, friends) {
+                    if (success) {
+                        that.saveFriendsToStackmob(friends);
+                    }
+                    else {
+                        that.showMessage("Failed to get fitbit friends");
+                    }
+                });
+
                 var template = $('#home_template');
                 var dto = {
-                    "stackmobID" : fitness.user.stackmobUserID,
-                    "displayName" : fitness.user.displayName
+                    "username" : fitness.user.username,
+                    "displayName" : fitness.user.displayname,
+                    "friendCount" : 99,//fitness.user.friends.length,
+                    "fitbitFriendCount" : ""
                 };
                 var html = Mustache.to_html(template.html(), dto);
                 this.$el.empty();
                 this.$el.append(html);
 
-                if (!fitness.user.fitbitUserID) {
-                    window.location.href = '/#auth';
-                }
                 $('.logout-link').show();
 
                 this.$el.trigger('create');
@@ -561,13 +580,8 @@ var fitness = fitness || {
 
             render: function() {
                 var template = $('#register_template');
-                var dto = {
-                    "stackmobID" : fitness.user.stackmobUserID,
-                    "displayName" : fitness.user.displayName
-                };
-                var html = Mustache.to_html(template.html(), dto);
                 this.$el.empty();
-                this.$el.append(html);
+                this.$el.append(template.html());
                 this.$el.trigger('create');
                 $('.logout-link').hide();
                 return this;
@@ -583,7 +597,7 @@ var fitness = fitness || {
 
             render: function() {
                 $('#authorize_link').live('click', function() {
-                    that.getFitbitRequestToken(fitness.user.stackmobUserID, function(success, data) {
+                    that.getFitbitRequestToken(fitness.user.username, function(success, data) {
                             if (success) {
                                 window.location.href = 'http://www.fitbit.com/oauth/authorize?oauth_token=' + data.oauth_token;
                             }
@@ -605,7 +619,7 @@ var fitness = fitness || {
 
         var router = new this.AppRouter();
         Backbone.history.start();
-//        if (this.user.stackmobUserID && this.displayName) {
+//        if (this.user.username && this.displayName) {
 //            this.homeView = new this.HomeView();
 //        }
 //        else {
@@ -615,5 +629,21 @@ var fitness = fitness || {
 };
 
 $(function() {
-    fitness.init();
+    StackMob.init({
+        appName: "fitnesschallenge",
+        clientSubdomain: "twistedogregmailcom",
+        publicKey: "ba025b72-92db-4681-9abb-231baca5a94d",
+        apiVersion: 0
+    });
+
+    var username = localStorage.getItem('username');
+    if (username) {
+        fitness.loginWithID(username, function() {
+            fitness.init();
+            return;
+        });
+    }
+    else {
+        fitness.init();
+    }
 });
